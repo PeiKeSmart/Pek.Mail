@@ -5,10 +5,12 @@ on:
     branches: [ main ]
     paths:
         - 'Pek.Mail/**'
+        - 'Pek.Mail.Extensions/**'
   pull_request:
     branches: [ main ]
     paths:
         - 'Pek.Mail/**'
+        - 'Pek.Mail.Extensions/**'
   workflow_dispatch:
 
 jobs:
@@ -31,6 +33,7 @@ jobs:
     - name: Pack
       run: |
         dotnet pack --no-build --version-suffix ${{ env.VERSION }} -c Release -o out Pek.Mail/Pek.Mail.csproj
+        dotnet pack --no-build --version-suffix ${{ env.VERSION }} -c Release -o out Pek.Mail.Extensions/Pek.Mail.Extensions.csproj
 
     - name: Publish
       run: |

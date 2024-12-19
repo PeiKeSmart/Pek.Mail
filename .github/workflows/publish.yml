@@ -21,9 +21,11 @@ jobs:
     - name: Restore
       run: |
         dotnet restore Pek.Mail/Pek.Mail.csproj
+        dotnet restore Pek.Mail.Extensions/Pek.Mail.Extensions.csproj
     - name: Build
       run: |
         dotnet pack --no-restore --version-suffix $(date "+%Y.%m%d") -c Release -o out Pek.Mail/Pek.Mail.csproj
+        dotnet pack --no-restore --version-suffix $(date "+%Y.%m%d") -c Release -o out Pek.Mail.Extensions/Pek.Mail.Extensions.csproj
     - name: Publish
       run: |
         dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
