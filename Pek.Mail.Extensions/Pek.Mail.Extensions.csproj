@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <OutputType>Library</OutputType>
-    <RootNamespace>Pek.Mail</RootNamespace>
+    <RootNamespace>Pek.Mail.Extensions</RootNamespace>
     <AssemblyTitle>邮件操作扩展类库</AssemblyTitle>
     <Description>基于DH框架的邮件操作扩展类库</Description>
     <Company>湖北登灏科技有限公司</Company>
@@ -51,7 +51,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.NCube.Base" Version="4.0.2024.1219-beta0914" />
+    <PackageReference Include="Pek.NCube.Base" Version="4.0.2024.1219-beta1036" />
+    <PackageReference Include="Pek.NCubeUI" Version="4.0.2024.1219-beta1036" />
   </ItemGroup>
 
   <ItemGroup>

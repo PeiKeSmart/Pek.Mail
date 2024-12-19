@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel;
 
+using MailKit.Security;
+
 using NewLife.Configuration;
 
 using Pek.Ids;
@@ -12,9 +14,34 @@ namespace Pek.Mail;
 public class MailSettings : Config<MailSettings>
 {
     /// <summary>
+    /// 是否使用默认证书
+    /// </summary>
+    [Description("是否使用默认证书")]
+    public Boolean UseDefaultCredentials { get; set; }
+
+    /// <summary>
+    /// 域名
+    /// </summary>
+    [Description("域名")]
+    public String? Domain { get; set; }
+
+    /// <summary>
+    /// 睡眠间隔。默认：3秒
+    /// </summary>
+    [Description("睡眠间隔。默认：3秒")]
+    public Int32 SleepInterval { get; set; } = 3000;
+
+    /// <summary>
+    /// 安全套接字选项
+    /// </summary>
+    [Description("安全套接字选项")]
+    public SecureSocketOptions? SecureSocketOption { get; set; }
+
+    /// <summary>
     /// 邮箱数据
     /// </summary>
-    public IList<MailData>? Data { get; set; }
+    [Description("邮箱数据")]
+    public IList<MailData> Data { get; set; } = [];
 
     /// <summary>实例化</summary>
     public MailSettings() { }
@@ -46,6 +73,9 @@ public class MailSettings : Config<MailSettings>
 
         base.OnLoaded();
     }
+
+    /// <summary>获取默认的配置数据</summary>
+    public MailData FindDefault() => Data.FirstOrDefault(e => e.IsDefault) ?? Data[0];
 }
 
 /// <summary>
