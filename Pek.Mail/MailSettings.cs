@@ -6,6 +6,8 @@ using NewLife.Configuration;
 
 using Pek.Ids;
 
+using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
+
 namespace Pek.Mail;
 
 /// <summary>邮箱设置</summary>
@@ -76,6 +78,17 @@ public class MailSettings : Config<MailSettings>
 
     /// <summary>获取默认的配置数据</summary>
     public MailData FindDefault() => Data.FirstOrDefault(e => e.IsDefault) ?? Data[0];
+
+    /// <summary>根据惟一标识获取数据</summary>
+    public MailData? FindByCode(String Code)
+    {
+        foreach (var item in Data)
+        {
+            if (item.Code == Code) return item;
+        }
+
+        return null;
+    }
 }
 
 /// <summary>
