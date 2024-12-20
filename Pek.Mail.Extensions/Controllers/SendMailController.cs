@@ -2,8 +2,10 @@
 
 using Microsoft.AspNetCore.Mvc;
 
+using NewLife;
 using NewLife.Log;
 
+using Pek.Helpers;
 using Pek.Infrastructure;
 using Pek.MailKit;
 using Pek.Models;
@@ -30,7 +32,7 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
     /// 发送测试邮件
     /// </summary>
     /// <returns></returns>
-    [DHAuthorize(IsAjax = true)]
+    //[DHAuthorize(IsAjax = true)]
     [HttpPost("SendMailTest")]
     public IActionResult SendMailTest([FromForm] String email_host, [FromForm] Boolean email_secure, [FromForm] Int32 email_port, [FromForm] String email_addr, [FromForm] String email_id, [FromForm] String email_pass, [FromForm] String email_test, [FromForm] String fromname, [FromForm] String emailSuffix)
     {
@@ -42,7 +44,18 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
 
         try
         {
-            SendEmail(email_host, email_port, fromname, email_id, email_pass, email_secure, GetResource("测试邮件"), GetResource("用于系统邮件测试"), email_addr, email_test, EmailSuffix: emailSuffix);
+            if (email_addr.IsNullOrWhiteSpace() || !ValidateHelper.IsEmail(email_addr))
+            {
+                return Json(new DResult { msg = GetResource("发件人地址为空或者格式不对") });
+            }
+
+            var suffix = MailHelper.GetEmailSuffix(email_addr);
+            if (!emailSuffix.IsNullOrWhiteSpace() && !emailSuffix.Contains(suffix, StringComparison.OrdinalIgnoreCase))
+            {
+                return Json(new DResult { msg = GetResource("测试邮箱域名后缀不在邮箱后缀参数中") });
+            }
+
+            SendEmail(email_host, email_port, fromname, email_id, email_pass, email_secure, GetResource("测试邮件"), GetResource("用于系统邮件测试"), email_addr, email_test);
             return Json(new DResult { msg = GetResource("发送成功") });
         }
         catch (Exception ex)
@@ -73,13 +86,12 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
     /// <param name="Password">邮箱密码</param>
     /// <param name="Port">服务器端口</param>
     /// <param name="UserName">邮箱账号</param>
-    /// <param name="EmailSuffix">邮箱后缀</param>
     private String SendEmail(String Host, Int32 Port, String FromName, String UserName, String Password, Boolean EnableSsl, String Subject, String Body,
         String FromAddress, String ToAddress, String? ToName = null,
          String? ReplyTo = null, String? ReplyToName = null,
         IEnumerable<String>? Bcc = null, IEnumerable<String>? Cc = null,
         String? AttachmentFilePath = null, String? AttachmentFileName = null,
-        IDictionary<String, String>? Headers = null, String? EmailSuffix = null)
+        IDictionary<String, String>? Headers = null)
     {
         var message = new MailMessage
         {
@@ -138,6 +150,6 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
             message.Attachments.Add(attachment);
         }
 
-        return _mailKitEmailSender.Send(message);
+        return _mailKitEmailSender.Send(message, Host, Port, UserName, Password, EnableSsl);
     }
 }
