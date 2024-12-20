@@ -10,6 +10,7 @@ using Pek.Infrastructure;
 using Pek.MailKit;
 using Pek.Models;
 using Pek.NCube.BaseControllers;
+using Pek.NCubeUI;
 
 using XCode.Membership;
 
@@ -31,9 +32,9 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
     /// 发送测试邮件
     /// </summary>
     /// <returns></returns>
-    //[DHAuthorize(IsAjax = true)]
+    [DHAuthorize(IsAjax = true)]
     [HttpPost("SendMailTest")]
-    public IActionResult SendMailTest([FromForm] String email_host, [FromForm] Boolean email_secure, [FromForm] Int32 email_port, [FromForm] String email_addr, [FromForm] String email_id, [FromForm] String email_pass, [FromForm] String email_test, [FromForm] String fromname, [FromForm] String emailSuffix)
+    public IActionResult SendMailTest([FromForm] String email_host, [FromForm] Boolean email_secure, [FromForm] Int32 email_port, [FromForm] String email_addr, [FromForm] String email_id, [FromForm] String email_pass, [FromForm] String email_test, [FromForm] String fromname, [FromForm] String? emailSuffix)
     {
         var user = ManageProvider.User;
         if (user!.Ex1 != 1)
@@ -55,12 +56,12 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
             }
 
             SendEmail(email_host, email_port, fromname, email_id, email_pass, email_secure, GetResource("测试邮件"), GetResource("用于系统邮件测试"), email_addr, email_test);
-            return Json(new DResult { msg = GetResource("发送成功") });
+            return Json(new DResult { success = true, msg = GetResource("发送成功") });
         }
         catch (Exception ex)
         {
             XTrace.WriteException(ex);
-            return Json(new DResult { msg = GetResource("发送失败") });
+            return Json(new DResult {  msg = GetResource("发送失败") });
         }
     }
 
