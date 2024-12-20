@@ -21,7 +21,6 @@ namespace Pek.Mail.Extensions.Controllers;
 /// </summary>
 [Produces("application/json")]
 [Route("api/v1/[controller]")] // 设置路由以包含版本号
-[Route("api/[controller]")]
 [ApiExplorerSettings(IgnoreApi = true)]
 public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileProvider fileProvider) : ApiControllerBaseX {
 
