@@ -1,6 +1,6 @@
 ﻿using Pek.Mail.Abstractions;
 
-namespace Pek.MailKit;
+namespace Pek.Mail.MailKit;
 
 /// <summary>
 /// MailKit电子邮件发送器

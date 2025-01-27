@@ -6,8 +6,6 @@ using NewLife.Configuration;
 
 using Pek.Ids;
 
-using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
-
 namespace Pek.Mail;
 
 /// <summary>邮箱设置</summary>

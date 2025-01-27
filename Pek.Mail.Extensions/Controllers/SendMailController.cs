@@ -7,7 +7,7 @@ using NewLife.Log;
 
 using Pek.Helpers;
 using Pek.Infrastructure;
-using Pek.MailKit;
+using Pek.Mail.MailKit;
 using Pek.Models;
 using Pek.NCube.BaseControllers;
 using Pek.NCubeUI;
