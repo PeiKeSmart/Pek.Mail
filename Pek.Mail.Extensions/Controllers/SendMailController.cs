@@ -1,10 +1,16 @@
-﻿using System.Net.Mail;
+﻿using System.ComponentModel;
+using System.Net.Mail;
+
+using DH.RateLimter;
 
 using Microsoft.AspNetCore.Mvc;
 
 using NewLife;
 using NewLife.Log;
+using NewLife.Model;
 
+using Pek.Events;
+using Pek.Events.EventModel;
 using Pek.Helpers;
 using Pek.Infrastructure;
 using Pek.MailKit;
@@ -62,6 +68,52 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
             XTrace.WriteException(ex);
             return Json(new DResult {  msg = GetResource("发送失败") });
         }
+    }
+
+    /// <summary>
+    /// 使用注册账号发送短信/邮箱验证码
+    /// </summary>
+    /// <param name="Name">账户</param>
+    /// <param name="ImgCheckCode">图片验证码</param>
+    /// <param name="Type">类型 1 是短信  2是邮箱</param>
+    /// <param name="Lng">语言标识</param>
+    /// <returns></returns>
+    /// <remarks>后续要考虑无验证码时增加接口权限校验</remarks>
+    [HttpPost("SendRegisteredCode")]
+    [DisplayName("注册账号发送短信/邮箱验证码")]
+    [RateValve(Policy = Policy.Ip, Limit = 60, Duration = 3600)]
+    public async Task<IActionResult> SendRegisteredCode([FromForm] String Name, [FromForm] String ImgCheckCode, [FromHeader] String Lng)
+    {
+        var result = new DResult();
+
+        var _eventPublisher = ObjectContainer.Provider.GetPekService<IEventPublisher>();
+
+        var smsevent = new MailEvent(result, false, String.Empty, Name, Lng);
+        await _eventPublisher!.PublishAsync(smsevent).ConfigureAwait(false);
+
+        return Json(smsevent.Result);
+    }
+
+    /// <summary>
+    /// 使用注册账号发送短信/邮箱验证码
+    /// </summary>
+    /// <param name="Name">账户</param>
+    /// <param name="Lng">语言标识</param>
+    /// <returns></returns>
+    /// <remarks>后续要考虑无验证码时增加接口权限校验</remarks>
+    [HttpPost("SendRegisteredCode")]
+    [DisplayName("注册账号发送短信/邮箱验证码")]
+    [RateValve(Policy = Policy.Ip, Limit = 60, Duration = 3600)]
+    public async Task<IActionResult> SendRegisteredCode([FromForm] String Name, [FromHeader] String Lng)
+    {
+        var result = new DResult();
+
+        var _eventPublisher = ObjectContainer.Provider.GetPekService<IEventPublisher>();
+
+        var smsevent = new MailEvent(result, false, String.Empty, Name, Lng);
+        await _eventPublisher!.PublishAsync(smsevent).ConfigureAwait(false);
+
+        return Json(smsevent.Result);
     }
 
     /// <summary>
