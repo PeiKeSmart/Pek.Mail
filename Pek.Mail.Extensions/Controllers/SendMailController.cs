@@ -125,7 +125,7 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
     [HttpPost("SendVerificationCode")]
     [DisplayName("发送找回邮箱验证码")]
     [RateValve(Policy = Policy.Ip, Limit = 10, Duration = 3600)]
-    public async Task<IActionResult> SendVerificationCode([FromForm] String Name, [FromForm] String ImgCheckCode, [FromHeader] String Lng)
+    public async Task<IActionResult> SendVerificationCode([FromForm] String Name, [FromForm] String ImgCheckCode, [FromHeader] String? Lng)
     {
         var result = new DResult();
 
@@ -146,7 +146,7 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
     [HttpPost("SendVerificationCode1")]
     [DisplayName("发送找回邮箱验证码")]
     [RateValve(Policy = Policy.Ip, Limit = 10, Duration = 3600)]
-    public async Task<IActionResult> SendVerificationCode([FromForm] String Name, [FromHeader] String Lng)
+    public async Task<IActionResult> SendVerificationCode([FromForm] String Name, [FromHeader] String? Lng)
     {
         var result = new DResult();
 
