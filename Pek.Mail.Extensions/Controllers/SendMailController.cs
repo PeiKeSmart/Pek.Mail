@@ -13,7 +13,7 @@ using Pek.Events;
 using Pek.Events.EventModel;
 using Pek.Helpers;
 using Pek.Infrastructure;
-using Pek.MailKit;
+using Pek.Mail.MailKit;
 using Pek.Models;
 using Pek.NCube.BaseControllers;
 using Pek.NCubeUI;

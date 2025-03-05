@@ -6,7 +6,7 @@ using Pek.Mail.Core;
 
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
-namespace Pek.MailKit;
+namespace Pek.Mail.MailKit;
 
 /// <summary>
 /// MailKit 电子邮件发送器

@@ -4,7 +4,7 @@ using System.Text;
 using MimeKit;
 using MimeKit.IO;
 
-namespace Pek.MailKit;
+namespace Pek.Mail.MailKit;
 
 /// <summary>
 /// 电子邮件扩展

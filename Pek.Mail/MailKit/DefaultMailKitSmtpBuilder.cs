@@ -1,9 +1,7 @@
 ﻿using MailKit.Net.Smtp;
 using MailKit.Security;
 
-using Pek.Mail;
-
-namespace Pek.MailKit;
+namespace Pek.Mail.MailKit;
 
 /// <summary>
 /// 默认MailKit SMTP生成器

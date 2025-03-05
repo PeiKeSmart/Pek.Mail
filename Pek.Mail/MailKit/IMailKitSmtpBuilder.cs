@@ -1,6 +1,6 @@
 ﻿using MailKit.Net.Smtp;
 
-namespace Pek.MailKit;
+namespace Pek.Mail.MailKit;
 
 /// <summary>
 /// MailKit SMTP生成器

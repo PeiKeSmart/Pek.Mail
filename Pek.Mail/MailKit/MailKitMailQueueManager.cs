@@ -3,7 +3,7 @@
 using Pek.Mail.Abstractions;
 using Pek.Mail.Core;
 
-namespace Pek.MailKit;
+namespace Pek.Mail.MailKit;
 
 /// <summary>
 /// Mailkit邮件队列管理器

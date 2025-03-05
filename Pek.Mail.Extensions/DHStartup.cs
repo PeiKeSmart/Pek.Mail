@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using Pek.Infrastructure;
+using Pek.Mail.MailKit;
 using Pek.Mail.Smtp;
-using Pek.MailKit;
 using Pek.VirtualFileSystem;
 
 namespace Pek.Mail.Extensions;
