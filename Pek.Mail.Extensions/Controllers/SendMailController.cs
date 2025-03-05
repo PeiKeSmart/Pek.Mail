@@ -75,7 +75,6 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
     /// </summary>
     /// <param name="Name">账户</param>
     /// <param name="ImgCheckCode">图片验证码</param>
-    /// <param name="Type">类型 1 是短信  2是邮箱</param>
     /// <param name="Lng">语言标识</param>
     /// <returns></returns>
     /// <remarks>后续要考虑无验证码时增加接口权限校验</remarks>
@@ -88,7 +87,7 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
 
         var _eventPublisher = ObjectContainer.Provider.GetPekService<IEventPublisher>();
 
-        var smsevent = new MailEvent(result, false, String.Empty, Name, Lng);
+        var smsevent = new MailEvent(result, true, ImgCheckCode, Name, Lng);
         await _eventPublisher!.PublishAsync(smsevent).ConfigureAwait(false);
 
         return Json(smsevent.Result);
@@ -101,7 +100,7 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
     /// <param name="Lng">语言标识</param>
     /// <returns></returns>
     /// <remarks>后续要考虑无验证码时增加接口权限校验</remarks>
-    [HttpPost("SendRegisteredCode")]
+    [HttpPost("SendRegisteredCode1")]
     [DisplayName("注册账号发送短信/邮箱验证码")]
     [RateValve(Policy = Policy.Ip, Limit = 60, Duration = 3600)]
     public async Task<IActionResult> SendRegisteredCode([FromForm] String Name, [FromHeader] String Lng)
