@@ -123,7 +123,7 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
     /// <param name="Lng">语言标识</param>
     /// <returns></returns>
     [HttpPost("SendVerificationCode")]
-    [DisplayName("发送邮箱验证码")]
+    [DisplayName("发送找回邮箱验证码")]
     [RateValve(Policy = Policy.Ip, Limit = 10, Duration = 3600)]
     public async Task<IActionResult> SendVerificationCode([FromForm] String Name, [FromForm] String ImgCheckCode, [FromHeader] String Lng)
     {
@@ -144,7 +144,7 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
     /// <param name="Lng">语言标识</param>
     /// <returns></returns>
     [HttpPost("SendVerificationCode1")]
-    [DisplayName("发送邮箱验证码")]
+    [DisplayName("发送找回邮箱验证码")]
     [RateValve(Policy = Policy.Ip, Limit = 10, Duration = 3600)]
     public async Task<IActionResult> SendVerificationCode([FromForm] String Name, [FromHeader] String Lng)
     {
