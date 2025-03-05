@@ -55,12 +55,12 @@ public class MailSettings : Config<MailSettings>
             {
                 new() {
                     Code = IdHelper.GetIdString(),
-                    Host = "smtp.qiye.aliyun.com",
+                    Host = "smtp.exmail.qq.com",
                     Port = 465,
                     IsSSL = true,
-                    UserName = "service@hlktech.com",
-                    Password = "hOFvyjOcLDfrNvM1",
-                    From = "service@hlktech.com",
+                    UserName = "service@chuangchu.net",
+                    Password = "D28GDxU7boyvn7aA",
+                    From = "service@chuangchu.net",
                     FromName = "海凌科",
                     IsEnabled = true,
                     IsDefault = true,
