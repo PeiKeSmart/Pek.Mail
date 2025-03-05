@@ -71,7 +71,7 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
     }
 
     /// <summary>
-    /// 使用注册账号发送短信/邮箱验证码
+    /// 使用注册账号发送邮箱验证码
     /// </summary>
     /// <param name="Name">账户</param>
     /// <param name="ImgCheckCode">图片验证码</param>
@@ -79,7 +79,7 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
     /// <returns></returns>
     /// <remarks>后续要考虑无验证码时增加接口权限校验</remarks>
     [HttpPost("SendRegisteredCode")]
-    [DisplayName("注册账号发送短信/邮箱验证码")]
+    [DisplayName("注册账号发送邮箱验证码")]
     [RateValve(Policy = Policy.Ip, Limit = 60, Duration = 3600)]
     public async Task<IActionResult> SendRegisteredCode([FromForm] String Name, [FromForm] String ImgCheckCode, [FromHeader] String? Lng)
     {
@@ -94,14 +94,14 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
     }
 
     /// <summary>
-    /// 使用注册账号发送短信/邮箱验证码。不需要图片验证码
+    /// 使用注册账号发送邮箱验证码。不需要图片验证码
     /// </summary>
     /// <param name="Name">账户</param>
     /// <param name="Lng">语言标识</param>
     /// <returns></returns>
     /// <remarks>后续要考虑无验证码时增加接口权限校验</remarks>
     [HttpPost("SendRegisteredCode1")]
-    [DisplayName("注册账号发送短信/邮箱验证码")]
+    [DisplayName("注册账号发送邮箱验证码")]
     [RateValve(Policy = Policy.Ip, Limit = 60, Duration = 3600)]
     public async Task<IActionResult> SendRegisteredCode([FromForm] String Name, [FromHeader] String? Lng)
     {
@@ -110,6 +110,49 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
         var _eventPublisher = ObjectContainer.Provider.GetPekService<IEventPublisher>();
 
         var smsevent = new MailEvent(result, false, null, Name, Lng, SId, "RegisteredCode");
+        await _eventPublisher!.PublishAsync(smsevent).ConfigureAwait(false);
+
+        return Json(smsevent.Result);
+    }
+
+    /// <summary>
+    /// 发送找回邮箱验证码
+    /// </summary>
+    /// <param name="Name">账户</param>
+    /// <param name="ImgCheckCode">图片验证码</param>
+    /// <param name="Lng">语言标识</param>
+    /// <returns></returns>
+    [HttpPost("SendVerificationCode")]
+    [DisplayName("发送邮箱验证码")]
+    [RateValve(Policy = Policy.Ip, Limit = 10, Duration = 3600)]
+    public async Task<IActionResult> SendVerificationCode([FromForm] String Name, [FromForm] String ImgCheckCode, [FromHeader] String Lng)
+    {
+        var result = new DResult();
+
+        var _eventPublisher = ObjectContainer.Provider.GetPekService<IEventPublisher>();
+
+        var smsevent = new MailEvent(result, true, ImgCheckCode, Name, Lng, SId, "FindPassword");
+        await _eventPublisher!.PublishAsync(smsevent).ConfigureAwait(false);
+
+        return Json(smsevent.Result);
+    }
+
+    /// <summary>
+    /// 发送找回邮箱验证码
+    /// </summary>
+    /// <param name="Name">账户</param>
+    /// <param name="Lng">语言标识</param>
+    /// <returns></returns>
+    [HttpPost("SendVerificationCode1")]
+    [DisplayName("发送邮箱验证码")]
+    [RateValve(Policy = Policy.Ip, Limit = 10, Duration = 3600)]
+    public async Task<IActionResult> SendVerificationCode([FromForm] String Name, [FromHeader] String Lng)
+    {
+        var result = new DResult();
+
+        var _eventPublisher = ObjectContainer.Provider.GetPekService<IEventPublisher>();
+
+        var smsevent = new MailEvent(result, false, null, Name, Lng, SId, "FindPassword");
         await _eventPublisher!.PublishAsync(smsevent).ConfigureAwait(false);
 
         return Json(smsevent.Result);
