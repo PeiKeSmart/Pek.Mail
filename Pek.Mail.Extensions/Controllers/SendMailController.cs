@@ -87,7 +87,7 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
 
         var _eventPublisher = ObjectContainer.Provider.GetPekService<IEventPublisher>();
 
-        var smsevent = new MailEvent(result, true, ImgCheckCode, Name, Lng);
+        var smsevent = new MailEvent(result, true, ImgCheckCode, Name, Lng, SId, "RegisteredCode");
         await _eventPublisher!.PublishAsync(smsevent).ConfigureAwait(false);
 
         return Json(smsevent.Result);
@@ -109,7 +109,7 @@ public class SendMailController(IMailKitEmailSender mailKitEmailSender, IDHFileP
 
         var _eventPublisher = ObjectContainer.Provider.GetPekService<IEventPublisher>();
 
-        var smsevent = new MailEvent(result, false, null, Name, Lng);
+        var smsevent = new MailEvent(result, false, null, Name, Lng, SId, "RegisteredCode");
         await _eventPublisher!.PublishAsync(smsevent).ConfigureAwait(false);
 
         return Json(smsevent.Result);
