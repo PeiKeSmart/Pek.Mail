@@ -47,14 +47,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DH.RateLimter" Version="4.16.2025.1231-beta0219" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+    <PackageReference Include="DH.RateLimter" Version="4.18.2026.210" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.103">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.AspNetCore" Version="4.16.2026.107-beta0342" />
-    <PackageReference Include="Pek.NCube.Base" Version="4.16.2026.106-beta1304" />
-    <PackageReference Include="Pek.NCubeUI" Version="4.16.2026.106-beta1304" />
+    <PackageReference Include="Pek.AspNetCore" Version="4.18.2026.226-beta0411" />
+    <PackageReference Include="Pek.NCube.Base" Version="4.16.2026.225-beta1057" />
+    <PackageReference Include="Pek.NCubeUI" Version="4.16.2026.225-beta1057" />
   </ItemGroup>
 
   <ItemGroup>
