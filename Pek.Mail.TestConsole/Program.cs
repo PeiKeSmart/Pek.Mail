@@ -214,22 +214,23 @@ internal class Program
     private static String Test_Smtp_ExplicitParams()
     {
         var to = PromptRecipient();
+        var def = MailSettings.Current.FindDefault();
 
         Prompt("  临时 SMTP 服务器 [回车使用配置中的值]: ");
         var host = Console.ReadLine()?.Trim();
-        if (String.IsNullOrEmpty(host)) host = MailSettings.Current.FindDefault().Host!;
+        if (String.IsNullOrEmpty(host)) host = def.Host!;
 
         Prompt("  端口 [回车使用配置中的值]: ");
         var portStr = Console.ReadLine()?.Trim();
-        var port    = String.IsNullOrEmpty(portStr) ? MailSettings.Current.FindDefault().Port : Int32.Parse(portStr);
+        var port    = String.IsNullOrEmpty(portStr) ? def.Port : Int32.Parse(portStr);
 
         Prompt("  用户名 [回车使用配置中的值]: ");
         var user = Console.ReadLine()?.Trim();
-        if (String.IsNullOrEmpty(user)) user = MailSettings.Current.FindDefault().UserName!;
+        if (String.IsNullOrEmpty(user)) user = def.UserName!;
 
         Prompt("  密码 [回车使用配置中的值]: ");
         var pass = Console.ReadLine()?.Trim();
-        if (String.IsNullOrEmpty(pass)) pass = MailSettings.Current.FindDefault().Password!;
+        if (String.IsNullOrEmpty(pass)) pass = def.Password!;
 
         var sender = new SmtpEmailSender();
         using var mail = new MailMessage();

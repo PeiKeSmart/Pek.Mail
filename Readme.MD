@@ -46,13 +46,13 @@ dotnet add package Pek.Mail.Extensions
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
-<MailSettings>
+<Mail>
   <UseDefaultCredentials>false</UseDefaultCredentials>
   <Domain></Domain>
   <SleepInterval>3000</SleepInterval>
-  <SecureSocketOption>Auto</SecureSocketOption>
+  <SecureSocketOption></SecureSocketOption>
   <Data>
-    <item>
+    <MailData>
       <Code>唯一标识（自动生成）</Code>
       <Host>smtp.exmail.qq.com</Host>
       <Port>465</Port>
@@ -64,9 +64,9 @@ dotnet add package Pek.Mail.Extensions
       <IsEnabled>true</IsEnabled>
       <IsDefault>true</IsDefault>
       <EmailSuffix></EmailSuffix>
-    </item>
+    </MailData>
   </Data>
-</MailSettings>
+</Mail>
 ```
 
 ### 2.2 配置字段说明
@@ -227,6 +227,8 @@ var result = _mailSender.Send(mail, normalize: true);
 
 ### 6.2 临时指定 SMTP 参数发送
 
+调用方明确指定账号，失败直接抛异常：
+
 ```csharp
 using var mail = new MailMessage();
 mail.To.Add("recipient@example.com");
@@ -240,6 +242,20 @@ var result = _mailSender.Send(
     UserName: "temp@163.com",
     Password: "temp_password",
     EnableSsl: true
+);
+```
+
+若希望指定账号失败后自动兜底使用配置文件中的已启用账号重试，开启 `fallback: true`：
+
+```csharp
+var result = _mailSender.Send(
+    mail: mail,
+    Host: "smtp.163.com",
+    Port: 465,
+    UserName: "temp@163.com",
+    Password: "temp_password",
+    EnableSsl: true,
+    fallback: true  // 失败后按 Config 中已启用账号依次重试
 );
 ```
 
@@ -297,14 +313,17 @@ await _mailSender.SendAsync(box);
 
 ## 8. 多账号路由
 
-当业务需要多个发件邮箱时（如：国内用企业邮箱，海外用 Gmail），可在配置中添加多条 `Data` 记录，通过 `EmailSuffix` 字段自动路由。
+在配置中添加多条 `MailData` 记录即可启用多账号。框架内置两层保障：
+
+- **自动 fallback**：默认账号（`IsDefault=true`）优先发送；若发送失败，自动依次尝试其他 `IsEnabled=true` 的账号，全部失败才抛 `AggregateException`
+- **`EmailSuffix` 路由**：按收件人邮箱后缀手动路由到指定账号（通过 `FindByCode` 实现）
 
 ### 8.1 配置多账号
 
 ```xml
 <Data>
-  <!-- 默认账号：发给国内用户 -->
-  <item>
+  <!-- 默认账号，优先使用 -->
+  <MailData>
     <Code>account-001</Code>
     <Host>smtp.exmail.qq.com</Host>
     <Port>465</Port>
@@ -316,31 +335,43 @@ await _mailSender.SendAsync(box);
     <IsEnabled>true</IsEnabled>
     <IsDefault>true</IsDefault>
     <EmailSuffix></EmailSuffix>
-  </item>
+  </MailData>
 
-  <!-- 专用账号：发给 Gmail 用户 -->
-  <item>
+  <!-- 备用账号，默认账号失败时自动 fallback 到此 -->
+  <MailData>
     <Code>account-002</Code>
-    <Host>smtp.gmail.com</Host>
-    <Port>587</Port>
-    <IsSSL>false</IsSSL>
-    <UserName>noreply@company.com</UserName>
-    <Password>gmail_app_password</Password>
-    <From>noreply@company.com</From>
-    <FromName>System Notification</FromName>
+    <Host>smtp.163.com</Host>
+    <Port>465</Port>
+    <IsSSL>true</IsSSL>
+    <UserName>backup@163.com</UserName>
+    <Password>backup_password</Password>
+    <From>backup@163.com</From>
+    <FromName>系统通知</FromName>
     <IsEnabled>true</IsEnabled>
     <IsDefault>false</IsDefault>
-    <!-- 当收件人邮箱包含 @gmail.com 时使用此账号 -->
-    <EmailSuffix>@gmail.com</EmailSuffix>
-  </item>
+    <EmailSuffix></EmailSuffix>
+  </MailData>
 </Data>
 ```
 
-### 8.2 代码获取指定账号配置
+### 8.2 账号选取规则
+
+| 优先级 | 条件 | 行为 |
+|--------|------|------|
+| 1 | `IsDefault=true` 且 `IsEnabled=true` | 首先尝试 |
+| 2 | 其他 `IsEnabled=true` 的账号 | fallback 依次尝试 |
+| 3 | 全部失败 | 抛出 `AggregateException` |
+
+> `IsEnabled=false` 的账号在任何情况下都不会被使用，包括 fallback 阶段。
+
+### 8.3 代码获取指定账号配置
 
 ```csharp
-// 获取默认账号
+// 获取默认且已启用的账号
 var defaultConfig = MailSettings.Current.FindDefault();
+
+// 获取所有已启用账号（默认账号排首位）
+var allEnabled = MailSettings.Current.FindAllEnabled();
 
 // 按 Code 获取指定账号
 var specificConfig = MailSettings.Current.FindByCode("account-002");
@@ -398,8 +429,9 @@ public class OrderService(IMailQueueService mailQueue)
 | `Send(EmailBox)` | 通过 EmailBox 同步发送，返回发送结果 |
 | `SendAsync(EmailBox)` | 通过 EmailBox 异步发送，返回发送结果 |
 | `Send(MailMessage, normalize)` | 通过 MailMessage 同步发送 |
-| `Send(MailMessage, Host, Port, UserName, Password, EnableSsl, normalize)` | 临时 SMTP 参数同步发送 |
 | `SendAsync(MailMessage, normalize)` | 通过 MailMessage 异步发送 |
+| `Send(MailMessage, Host, Port, UserName, Password, EnableSsl, normalize, fallback)` | 临时 SMTP 参数同步发送；`fallback=true` 时失败后自动兜底 |
+| `SendAsync(MailMessage, Host, Port, UserName, Password, EnableSsl, normalize, fallback)` | 临时 SMTP 参数异步发送；`fallback=true` 时失败后自动兜底 |
 
 ### IMailQueueService
 
@@ -418,10 +450,11 @@ public class OrderService(IMailQueueService mailQueue)
 
 ## 11. 常见问题
 
-### Q1：发送失败返回什么？
+### Q1：发送失败怎么处理？
 
-- `MailKitEmailSender`：成功返回服务器响应字符串，失败返回异常消息。
-- `SmtpEmailSender`：成功返回 `"OK"`，失败返回 `"Fail"`（同步）或 `"Smtp方法无返回"`（异步）。
+- `MailKitEmailSender`：成功返回服务器响应字符串；所有已启用账号均失败时抛 `AggregateException`，其中包含每个账号的失败异常。
+- `SmtpEmailSender`：成功返回 `"OK"`；所有已启用账号均失败时抛 `AggregateException`。
+- 临时 SMTP 参数版（`Send(mail, Host, ...)`）：失败直接抛异常；开启 `fallback: true` 后行为同上。
 
 ### Q2：如何使用腾讯企业邮箱？
 
@@ -473,4 +506,4 @@ public class OrderService(IMailQueueService mailQueue)
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
-| 4.18 | 2026-02-26 | 当前版本，支持 net8/net9/net10 |
+| 4.18 | 2026-02-26 | 多账号自动 fallback、`fallback` 参数、修复 SmtpEmailSender 异常处理、FindDefault 增加 IsEnabled 过滤 |

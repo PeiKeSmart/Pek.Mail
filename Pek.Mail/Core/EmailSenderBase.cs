@@ -219,6 +219,9 @@ public abstract class EmailSenderBase : IEmailSender
     /// <param name="EnableSsl">是否启用SSL</param>
     protected abstract Task<String> SendEmailAsync(MailMessage mail, String Host, Int32 Port, String UserName, String Password, Boolean EnableSsl);
 
+    /// <summary>解析分解邮件地址时的分隔符</summary>
+    private static readonly Char[] _addressSeparators = [',', ';'];
+
     /// <summary>
     /// 处理附件
     /// </summary>
@@ -226,7 +229,7 @@ public abstract class EmailSenderBase : IEmailSender
     /// <param name="attachmentCollection">附件集合对象</param>
     protected virtual void HandlerAttachments(IList<IAttachment> attachments, AttachmentCollection attachmentCollection)
     {
-        if (attachments == null || !attachments.Any())
+        if (attachments == null || attachments.Count == 0)
             return;
         foreach (var item in attachments)
         {
@@ -260,8 +263,7 @@ public abstract class EmailSenderBase : IEmailSender
     {
         if (mailAddress?.IsEmpty() == true)
             return;
-        Char[] separator = [',', ';'];
-        var addressArray = mailAddress?.Split(separator);
+        var addressArray = mailAddress?.Split(_addressSeparators);
         PaserMailAddress([.. addressArray], mailAddressCollection);
     }
 
@@ -277,7 +279,7 @@ public abstract class EmailSenderBase : IEmailSender
             return;
         foreach (var address in mailAddress)
         {
-            if (address.Trim() == String.Empty)
+            if (String.IsNullOrWhiteSpace(address))
                 continue;
             mailAddressCollection.Add(new MailAddress(address));
         }
