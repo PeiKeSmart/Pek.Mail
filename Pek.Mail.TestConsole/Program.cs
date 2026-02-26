@@ -1,5 +1,7 @@
 ﻿using System.Net.Mail;
 
+using NewLife.Log;
+
 using Pek.Mail.Attachments;
 using Pek.Mail.Core;
 using Pek.Mail.MailKit;
@@ -11,16 +13,20 @@ internal class Program
 {
     private static async Task Main(String[] args)
     {
-        Console.OutputEncoding = System.Text.Encoding.UTF8;
-        Console.Title = "Pek.Mail 邮件发送测试工具";
+        XTrace.UseConsole();
 
-        PrintBanner();
+        XTrace.WriteLine("========================================");
+        XTrace.WriteLine("  Pek.Mail 邮件发送控制台测试工具");
+        XTrace.WriteLine("========================================");
+
         EnsureConfigReady();
         ShowConfig();
 
         while (true)
         {
             PrintMenu();
+            Console.Write("请输入编号: ");
+            Console.Out.Flush();
             var key = Console.ReadLine()?.Trim();
 
             switch (key)
@@ -36,10 +42,10 @@ internal class Program
                 case "0": ShowConfig(); break;
                 case "q":
                 case "Q":
-                    Console.WriteLine("\n再见！");
+                    XTrace.WriteLine("已退出。");
                     return;
                 default:
-                    PrintWarn("无效输入，请重新选择。");
+                    XTrace.WriteLine("无效输入，请重新选择。");
                     break;
             }
         }
@@ -55,36 +61,29 @@ internal class Program
     /// </summary>
     private static void EnsureConfigReady()
     {
-        // 触发 NewLife Config<T> 自动生成配置文件
         var cfg = MailSettings.Current.FindDefault();
 
-        // 判断是否仍是默认占位值（Host 为空或未修改过）
         var isPlaceholder = String.IsNullOrEmpty(cfg.Host)
-            || cfg.UserName == "service@chuangchu.net"; // NewLife 生成的内置示例账号
+            || cfg.UserName == "your_account@example.com";
 
         if (!isPlaceholder) return;
 
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine();
-        Console.WriteLine("  ┌─────────────────────────────────────────────────────┐");
-        Console.WriteLine("  │  检测到配置文件为初始默认值，请先编辑 SMTP 配置后再测试  │");
-        Console.WriteLine("  └─────────────────────────────────────────────────────┘");
-        Console.ResetColor();
-        Console.WriteLine();
-        Console.WriteLine("  需要修改的关键字段：");
-        Console.WriteLine("    Host     - SMTP 服务器地址（如 smtp.exmail.qq.com）");
-        Console.WriteLine("    Port     - 端口（465 = SSL，587 = StartTLS，25 = 明文）");
-        Console.WriteLine("    IsSSL    - 是否 SSL（true/false）");
-        Console.WriteLine("    UserName - 邮箱账号");
-        Console.WriteLine("    Password - 密码或授权码");
-        Console.WriteLine("    From     - 发件人地址");
-        Console.WriteLine("    FromName - 发件人昵称");
-        Console.WriteLine();
-        Console.Write("  配置文件已生成，编辑完成后按回车继续，或输入 q 退出: ");
+        XTrace.WriteLine("检测到配置文件为初始默认值，请先编辑 SMTP 配置后再测试。");
+        XTrace.WriteLine("需要修改的关键字段：");
+        XTrace.WriteLine("  Host     - SMTP 服务器地址（如 smtp.exmail.qq.com）");
+        XTrace.WriteLine("  Port     - 端口（465=SSL，587=StartTLS，25=明文）");
+        XTrace.WriteLine("  IsSSL    - 是否 SSL（true/false）");
+        XTrace.WriteLine("  UserName - 邮箱账号");
+        XTrace.WriteLine("  Password - 密码或授权码");
+        XTrace.WriteLine("  From     - 发件人地址");
+        XTrace.WriteLine("  FromName - 发件人昵称");
+
+        Console.Write("配置文件已生成，编辑完成后按回车继续，或输入 q 退出: ");
+        Console.Out.Flush();
         var input = Console.ReadLine()?.Trim();
         if (input?.ToLower() == "q")
         {
-            Console.WriteLine("已退出，请编辑配置文件后重新运行。");
+            XTrace.WriteLine("已退出，请编辑配置文件后重新运行。");
             Environment.Exit(0);
         }
     }
@@ -105,7 +104,7 @@ internal class Program
             body:       "<h2>发送成功 ✓</h2><p>这是由 <b>Pek.Mail MailKit</b> 发出的简单测试邮件。</p>",
             isBodyHtml: true
         );
-        PrintResult("（无返回值，未抛出异常即为成功）");
+        XTrace.WriteLine("发送完成，未抛出异常即为成功。");
     }
 
     /// <summary>MailKit：EmailBox 多收件人 + 抄送</summary>
@@ -125,7 +124,7 @@ internal class Program
         };
 
         var result = await sender.SendAsync(box);
-        PrintResult(result);
+        XTrace.WriteLine("发送结果：{0}", result);
     }
 
     /// <summary>MailKit：内存流附件</summary>
@@ -148,7 +147,7 @@ internal class Program
         box.Attachments.Add(new MemoryStreamAttachment(stream, "export.csv"));
 
         var result = await sender.SendAsync(box);
-        PrintResult(result);
+        XTrace.WriteLine("发送结果：{0}", result);
     }
 
     /// <summary>MailKit：物理文件附件（自动创建临时文件）</summary>
@@ -171,7 +170,7 @@ internal class Program
             box.Attachments.Add(new PhysicalFileAttachment(tmp));
 
             var result = await sender.SendAsync(box);
-            PrintResult(result);
+            XTrace.WriteLine("发送结果：{0}", result);
         }
         finally
         {
@@ -193,7 +192,7 @@ internal class Program
         mail.Priority   = MailPriority.High;
 
         var result = await sender.SendAsync(mail, normalize: true);
-        PrintResult(result);
+        XTrace.WriteLine("发送结果：{0}", result);
     }
 
     /// <summary>Smtp：简单字符串发送</summary>
@@ -208,7 +207,7 @@ internal class Program
             body:       "<h2>Smtp 发送成功 ✓</h2><p>由 <b>SmtpEmailSender</b> 发出。</p>",
             isBodyHtml: true
         );
-        PrintResult("（无返回值，未抛出异常即为成功）");
+        XTrace.WriteLine("发送完成，未抛出异常即为成功。");
     }
 
     /// <summary>Smtp：临时参数覆盖发送（在运行时手动输入 SMTP 参数）</summary>
@@ -216,19 +215,19 @@ internal class Program
     {
         var to = PromptRecipient();
 
-        Console.Write("  临时 SMTP 服务器 [回车使用配置中的值]: ");
+        Prompt("  临时 SMTP 服务器 [回车使用配置中的值]: ");
         var host = Console.ReadLine()?.Trim();
         if (String.IsNullOrEmpty(host)) host = MailSettings.Current.FindDefault().Host!;
 
-        Console.Write("  端口 [回车使用配置中的值]: ");
+        Prompt("  端口 [回车使用配置中的值]: ");
         var portStr = Console.ReadLine()?.Trim();
         var port    = String.IsNullOrEmpty(portStr) ? MailSettings.Current.FindDefault().Port : Int32.Parse(portStr);
 
-        Console.Write("  用户名 [回车使用配置中的值]: ");
+        Prompt("  用户名 [回车使用配置中的值]: ");
         var user = Console.ReadLine()?.Trim();
         if (String.IsNullOrEmpty(user)) user = MailSettings.Current.FindDefault().UserName!;
 
-        Console.Write("  密码 [回车使用配置中的值]: ");
+        Prompt("  密码 [回车使用配置中的值]: ");
         var pass = Console.ReadLine()?.Trim();
         if (String.IsNullOrEmpty(pass)) pass = MailSettings.Current.FindDefault().Password!;
 
@@ -240,7 +239,7 @@ internal class Program
         mail.IsBodyHtml = false;
 
         var result = sender.Send(mail, host, port, user, pass, true);
-        PrintResult(result);
+        XTrace.WriteLine("发送结果：{0}", result);
         return result;
     }
 
@@ -261,7 +260,7 @@ internal class Program
         {
             _cachedRecipient = null;
         }
-        PrintSuccess("全部测试完成，请检查收件箱。");
+        XTrace.WriteLine("全部测试完成，请检查收件箱。");
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -278,99 +277,55 @@ internal class Program
 
         while (true)
         {
-            Console.Write("\n  收件人邮箱地址: ");
+            Console.WriteLine();
+            Console.Write("  收件人邮箱地址: ");
+            Console.Out.Flush();
             var addr = Console.ReadLine()?.Trim();
             if (!String.IsNullOrEmpty(addr) && addr.Contains('@'))
                 return addr;
-            PrintWarn("地址格式不正确，请重新输入。");
+            XTrace.WriteLine("地址格式不正确，请重新输入。");
         }
     }
 
     private static async Task RunAsync(String name, Func<Task> action)
     {
-        Console.WriteLine();
-        PrintSection(name);
+        XTrace.WriteLine("开始测试：{0}", name);
         try
         {
             await action();
         }
         catch (Exception ex)
         {
-            PrintError($"发送失败：{ex.Message}");
+            XTrace.WriteException(ex);
         }
     }
 
     private static void ShowConfig()
     {
         var cfg = MailSettings.Current.FindDefault();
-        Console.WriteLine();
-        PrintSection("当前 SMTP 配置（Config/Mail.config）");
-        Console.WriteLine($"  服务器  : {cfg.Host}:{cfg.Port}");
-        Console.WriteLine($"  SSL     : {cfg.IsSSL}");
-        Console.WriteLine($"  用户名  : {cfg.UserName}");
-        Console.WriteLine($"  发件人  : {cfg.From} ({cfg.FromName})");
-    }
-
-    private static void PrintBanner()
-    {
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("╔══════════════════════════════════════════╗");
-        Console.WriteLine("║      Pek.Mail 邮件发送控制台测试工具      ║");
-        Console.WriteLine("╚══════════════════════════════════════════╝");
-        Console.ResetColor();
+        XTrace.WriteLine("当前 SMTP 配置：{0}:{1}  SSL={2}  用户={3}  发件人={4}({5})",
+            cfg.Host, cfg.Port, cfg.IsSSL, cfg.UserName, cfg.From, cfg.FromName);
     }
 
     private static void PrintMenu()
     {
         Console.WriteLine();
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("  ── 请选择测试项目 ──────────────────────────");
-        Console.ResetColor();
-        Console.WriteLine("  1  MailKit - 简单字符串发送");
-        Console.WriteLine("  2  MailKit - EmailBox（多收件人 + 抄送）");
-        Console.WriteLine("  3  MailKit - 内存流附件");
-        Console.WriteLine("  4  MailKit - 物理文件附件（自动创建临时文件）");
-        Console.WriteLine("  5  MailKit - 高优先级 MailMessage");
-        Console.WriteLine("  6  Smtp   - 简单字符串发送");
-        Console.WriteLine("  7  Smtp   - 运行时手动输入 SMTP 参数");
-        Console.WriteLine("  8  运行全部测试（1~5，共用收件人）");
-        Console.WriteLine("  0  重新显示当前配置");
-        Console.WriteLine("  q  退出");
-        Console.Write("\n  请输入编号: ");
+        Console.WriteLine("1  MailKit - 简单字符串发送");
+        Console.WriteLine("2  MailKit - EmailBox（多收件人 + 抄送）");
+        Console.WriteLine("3  MailKit - 内存流附件");
+        Console.WriteLine("4  MailKit - 物理文件附件（自动创建临时文件）");
+        Console.WriteLine("5  MailKit - 高优先级 MailMessage");
+        Console.WriteLine("6  Smtp   - 简单字符串发送");
+        Console.WriteLine("7  Smtp   - 运行时手动输入 SMTP 参数");
+        Console.WriteLine("8  运行全部测试（1~5，共用收件人）");
+        Console.WriteLine("0  重新显示当前配置");
+        Console.WriteLine("q  退出");
+        Console.WriteLine();
     }
 
-    private static void PrintSection(String title)
+    private static void Prompt(String text)
     {
-        Console.ForegroundColor = ConsoleColor.DarkCyan;
-        Console.WriteLine($"[{title}]");
-        Console.ResetColor();
-    }
-
-    private static void PrintResult(String? result)
-    {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"  → 结果: {result ?? "(无返回值)"}");
-        Console.ResetColor();
-    }
-
-    private static void PrintSuccess(String msg)
-    {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"  ✓ {msg}");
-        Console.ResetColor();
-    }
-
-    private static void PrintError(String msg)
-    {
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($"  ✗ {msg}");
-        Console.ResetColor();
-    }
-
-    private static void PrintWarn(String msg)
-    {
-        Console.ForegroundColor = ConsoleColor.DarkYellow;
-        Console.WriteLine($"  ! {msg}");
-        Console.ResetColor();
+        Console.Write(text);
+        Console.Out.Flush();
     }
 }
