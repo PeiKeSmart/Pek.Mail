@@ -37,4 +37,16 @@ public class NullEmailSender : EmailSenderBase
     /// <param name="mail">邮件</param>
     /// <returns></returns>
     protected override Task<String> SendEmailAsync(MailMessage mail) => Task.FromResult("空电子邮件发送器");
+
+    /// <summary>
+    /// 发送邮件
+    /// </summary>
+    /// <param name="mail">邮件</param>
+    /// <param name="Host">服务器地址</param>
+    /// <param name="Port">服务器端口</param>
+    /// <param name="UserName">邮箱账号</param>
+    /// <param name="Password">邮箱密码</param>
+    /// <param name="EnableSsl">是否启用SSL</param>
+    /// <returns></returns>
+    protected override Task<String> SendEmailAsync(MailMessage mail, String Host, Int32 Port, String UserName, String Password, Boolean EnableSsl) => Task.FromResult("空电子邮件发送器");
 }

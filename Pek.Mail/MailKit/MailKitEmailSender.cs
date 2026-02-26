@@ -38,8 +38,9 @@ public class MailKitEmailSender(IMailKitSmtpBuilder smtpBuilder) : EmailSenderBa
         {
             try
             {
-                // 每次尝试时使用该账号的发件人地址
                 mail.From = new MailAddress(account.From!, account.FromName, Encoding.UTF8);
+                mail.ReplyToList.Clear();
+                mail.ReplyToList.Add(new MailAddress(account.From!));
 
                 using var client = BuildSmtpClient(account.Host!, account.Port, account.UserName!, account.Password!, account.IsSSL);
                 var message = mail.ToMimeMessage();
@@ -90,8 +91,9 @@ public class MailKitEmailSender(IMailKitSmtpBuilder smtpBuilder) : EmailSenderBa
         List<Exception>? errors = null;
         foreach (var account in accounts)
         {
-            // 每次尝试时使用该账号的发件人地址
             mail.From = new MailAddress(account.From!, account.FromName, Encoding.UTF8);
+            mail.ReplyToList.Clear();
+            mail.ReplyToList.Add(new MailAddress(account.From!));
 
             using var client = BuildSmtpClient(account.Host!, account.Port, account.UserName!, account.Password!, account.IsSSL);
             var message = mail.ToMimeMessage();
@@ -113,6 +115,32 @@ public class MailKitEmailSender(IMailKitSmtpBuilder smtpBuilder) : EmailSenderBa
         }
 
         throw new AggregateException($"所有 {accounts.Count} 个启用的邮箱账号均发送失败", errors!);
+    }
+
+    /// <summary>
+    /// 异步发送邮件
+    /// </summary>
+    /// <param name="mail">邮件</param>
+    /// <param name="Host">服务器地址</param>
+    /// <param name="Port">服务器端口</param>
+    /// <param name="UserName">邮箱账号</param>
+    /// <param name="Password">邮箱密码</param>
+    /// <param name="EnableSsl">是否启用SSL</param>
+    protected override async Task<String> SendEmailAsync(MailMessage mail, String Host, Int32 Port, String UserName, String Password, Boolean EnableSsl)
+    {
+        using var client = BuildSmtpClient(Host, Port, UserName, Password, EnableSsl);
+        var message = mail.ToMimeMessage();
+        try
+        {
+            var result = await client.SendAsync(message).ConfigureAwait(false);
+            await client.DisconnectAsync(true).ConfigureAwait(false);
+            return result;
+        }
+        catch
+        {
+            await client.DisconnectAsync(true).ConfigureAwait(false);
+            throw;
+        }
     }
 
     /// <summary>

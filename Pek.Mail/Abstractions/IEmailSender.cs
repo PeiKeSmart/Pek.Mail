@@ -77,7 +77,21 @@ public interface IEmailSender
     /// <param name="Port">服务器端口</param>
     /// <param name="UserName">邮箱账号</param>
     /// <param name="EnableSsl">是否启用SSL,0为否,1为是</param>
-    String Send(MailMessage mail, String Host, Int32 Port, String UserName, String Password, Boolean EnableSsl, Boolean normalize = true);
+    /// <param name="fallback">指定账号发送失败时，是否自动兜底使用配置文件中的已启用账号轮换发送</param>
+    String Send(MailMessage mail, String Host, Int32 Port, String UserName, String Password, Boolean EnableSsl, Boolean normalize = true, Boolean fallback = false);
+
+    /// <summary>
+    /// 异步发送邮件
+    /// </summary>
+    /// <param name="mail">邮件消息</param>
+    /// <param name="Host">服务器地址</param>
+    /// <param name="Port">服务器端口</param>
+    /// <param name="UserName">邮箱账号</param>
+    /// <param name="Password">邮箱密码</param>
+    /// <param name="EnableSsl">是否启用SSL,0为否,1为是</param>
+    /// <param name="normalize">是否规范化邮件，如果是，则设置发件人地址/名称并使邮件编码为UTF-8</param>
+    /// <param name="fallback">指定账号发送失败时，是否自动兜底使用配置文件中的已启用账号轮换发送</param>
+    Task<String> SendAsync(MailMessage mail, String Host, Int32 Port, String UserName, String Password, Boolean EnableSsl, Boolean normalize = true, Boolean fallback = false);
 
     /// <summary>
     /// 发送邮件

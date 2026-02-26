@@ -1,6 +1,8 @@
 ﻿using System.Net.Mail;
 using System.Text;
 
+using NewLife.Log;
+
 using Pek.Mail.Abstractions;
 
 namespace Pek.Mail.Core;
@@ -73,14 +75,10 @@ public abstract class EmailSenderBase : IEmailSender
     public virtual String Send(EmailBox box)
     {
         var mail = new MailMessage();
-
-        var config = MailSettings.Current.FindDefault();
-
-        mail.From = new MailAddress(config.From!);
+        // From 和 ReplyToList 由 SendEmail 内部按轮换账号统一设置，此处不预设
         PaserMailAddress(box.To, mail.To);
         PaserMailAddress(box.Cc, mail.CC);
         PaserMailAddress(box.Bcc, mail.Bcc);
-        PaserMailAddress(config.From, mail.ReplyToList);
         mail.Subject = box.Subject;
         mail.Body = box.Body;
         mail.IsBodyHtml = box.IsBodyHtml;
@@ -96,12 +94,10 @@ public abstract class EmailSenderBase : IEmailSender
     public virtual async Task<String> SendAsync(EmailBox box)
     {
         var mail = new MailMessage();
-        var config = MailSettings.Current.FindDefault();
-        mail.From = new MailAddress(config.From!, config.FromName);
+        // From 和 ReplyToList 由 SendEmailAsync 内部按轮换账号统一设置，此处不预设
         PaserMailAddress(box.To, mail.To);
         PaserMailAddress(box.Cc, mail.CC);
         PaserMailAddress(box.Bcc, mail.Bcc);
-        PaserMailAddress(config.From, mail.ReplyToList);
         mail.Subject = box.Subject;
         mail.Body = box.Body;
         mail.IsBodyHtml = box.IsBodyHtml;
@@ -125,17 +121,56 @@ public abstract class EmailSenderBase : IEmailSender
     /// 发送邮件
     /// </summary>
     /// <param name="mail">邮件消息</param>
-    /// <param name="normalize">是否规范化邮件，如果是，则设置发件人地址/名称并使邮件编码为UTF-8</param>
     /// <param name="Host">服务器地址</param>
-    /// <param name="Password">邮箱密码</param>
     /// <param name="Port">服务器端口</param>
     /// <param name="UserName">邮箱账号</param>
-    /// <param name="EnableSsl">是否启用SSL,0为否,1为是</param>
-    public virtual String Send(MailMessage mail, String Host, Int32 Port, String UserName, String Password, Boolean EnableSsl, Boolean normalize = true)
+    /// <param name="Password">邮箱密码</param>
+    /// <param name="EnableSsl">是否启用SSL</param>
+    /// <param name="normalize">是否规范化邮件，如果是，则设置发件人地址/名称并使邮件编码为UTF-8</param>
+    /// <param name="fallback">指定账号发送失败时，是否自动兜底使用配置文件中的已启用账号轮换发送</param>
+    public virtual String Send(MailMessage mail, String Host, Int32 Port, String UserName, String Password, Boolean EnableSsl, Boolean normalize = true, Boolean fallback = false)
     {
         if (normalize)
             NormalizeMail(mail);
-        return SendEmail(mail, Host, Port, UserName, Password, EnableSsl);
+        try
+        {
+            return SendEmail(mail, Host, Port, UserName, Password, EnableSsl);
+        }
+        catch (Exception ex) when (fallback)
+        {
+            XTrace.WriteException(ex);
+            // 指定账号发送失败，兜底使用配置文件中的账号轮换发送；重置 From，由 SendEmail 内部按各账号重新设置
+            mail.From = null!;
+            return SendEmail(mail);
+        }
+    }
+
+    /// <summary>
+    /// 异步发送邮件
+    /// </summary>
+    /// <param name="mail">邮件消息</param>
+    /// <param name="Host">服务器地址</param>
+    /// <param name="Port">服务器端口</param>
+    /// <param name="UserName">邮箱账号</param>
+    /// <param name="Password">邮箱密码</param>
+    /// <param name="EnableSsl">是否启用SSL</param>
+    /// <param name="normalize">是否规范化邮件，如果是，则设置发件人地址/名称并使邮件编码为UTF-8</param>
+    /// <param name="fallback">指定账号发送失败时，是否自动兜底使用配置文件中的已启用账号轮换发送</param>
+    public virtual async Task<String> SendAsync(MailMessage mail, String Host, Int32 Port, String UserName, String Password, Boolean EnableSsl, Boolean normalize = true, Boolean fallback = false)
+    {
+        if (normalize)
+            NormalizeMail(mail);
+        try
+        {
+            return await SendEmailAsync(mail, Host, Port, UserName, Password, EnableSsl).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (fallback)
+        {
+            XTrace.WriteException(ex);
+            // 指定账号发送失败，兜底使用配置文件中的账号轮换发送；重置 From，由 SendEmailAsync 内部按各账号重新设置
+            mail.From = null!;
+            return await SendEmailAsync(mail).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -172,6 +207,17 @@ public abstract class EmailSenderBase : IEmailSender
     /// </summary>
     /// <param name="mail">邮件</param>
     protected abstract Task<String> SendEmailAsync(MailMessage mail);
+
+    /// <summary>
+    /// 发送邮件
+    /// </summary>
+    /// <param name="mail">邮件</param>
+    /// <param name="Host">服务器地址</param>
+    /// <param name="Port">服务器端口</param>
+    /// <param name="UserName">邮箱账号</param>
+    /// <param name="Password">邮箱密码</param>
+    /// <param name="EnableSsl">是否启用SSL</param>
+    protected abstract Task<String> SendEmailAsync(MailMessage mail, String Host, Int32 Port, String UserName, String Password, Boolean EnableSsl);
 
     /// <summary>
     /// 处理附件
