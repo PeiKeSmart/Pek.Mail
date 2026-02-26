@@ -55,13 +55,13 @@ public class MailSettings : Config<MailSettings>
             {
                 new() {
                     Code = IdHelper.GetIdString(),
-                    Host = "smtp.exmail.qq.com",
+                    Host = "smtp.example.com",
                     Port = 465,
                     IsSSL = true,
-                    UserName = "service@chuangchu.net",
-                    Password = "D28GDxU7boyvn7aA",
-                    From = "service@chuangchu.net",
-                    FromName = "海凌科",
+                    UserName = "your_account@example.com",
+                    Password = "your_password",
+                    From = "your_account@example.com",
+                    FromName = "系统通知",
                     IsEnabled = true,
                     IsDefault = true,
                     EmailSuffix = String.Empty
