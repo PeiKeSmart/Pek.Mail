@@ -74,8 +74,11 @@ public class MailSettings : Config<MailSettings>
         base.OnLoaded();
     }
 
-    /// <summary>获取默认的配置数据</summary>
-    public MailData FindDefault() => Data.FirstOrDefault(e => e.IsDefault) ?? Data[0];
+    /// <summary>获取默认的配置数据。优先返回标记为默认且已启用的账号，其次返回任意已启用账号，均不满足则抛出异常</summary>
+    public MailData FindDefault() =>
+        Data.FirstOrDefault(e => e.IsDefault && e.IsEnabled)
+        ?? Data.FirstOrDefault(e => e.IsEnabled)
+        ?? throw new InvalidOperationException("没有找到可用的邮箱配置，请检查 Mail.config 中是否存在 IsEnabled=true 的邮箱账号");
 
     /// <summary>根据惟一标识获取数据</summary>
     public MailData? FindByCode(String Code)

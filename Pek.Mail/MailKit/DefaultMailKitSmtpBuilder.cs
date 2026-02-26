@@ -48,7 +48,7 @@ public class DefaultMailKitSmtpBuilder : IMailKitSmtpBuilder
         var client = new SmtpClient();
         try
         {
-            ConfigureClient(client);
+            ConfigureClient(client, Host, Port, UserName, Password, EnableSsl);
             return client;
         }
         catch
