@@ -80,6 +80,10 @@ public class MailSettings : Config<MailSettings>
         ?? Data.FirstOrDefault(e => e.IsEnabled)
         ?? throw new InvalidOperationException("没有找到可用的邮箱配置，请检查 Mail.config 中是否存在 IsEnabled=true 的邮箱账号");
 
+    /// <summary>获取所有已启用的账号，默认账号（IsDefault=true）排在首位，其余按原顺序排列</summary>
+    public IList<MailData> FindAllEnabled() =>
+        [.. Data.Where(e => e.IsEnabled).OrderByDescending(e => e.IsDefault)];
+
     /// <summary>根据惟一标识获取数据</summary>
     public MailData? FindByCode(String Code)
     {

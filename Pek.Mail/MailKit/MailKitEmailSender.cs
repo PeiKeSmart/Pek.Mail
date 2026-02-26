@@ -1,4 +1,5 @@
 ﻿using System.Net.Mail;
+using System.Text;
 
 using NewLife.Log;
 
@@ -23,17 +24,38 @@ public class MailKitEmailSender(IMailKitSmtpBuilder smtpBuilder) : EmailSenderBa
     private readonly IMailKitSmtpBuilder _smtpBuilder = smtpBuilder;
 
     /// <summary>
-    /// 发送邮件
+    /// 发送邮件。依次尝试所有已启用账号，默认账号优先；某账号发送失败时自动切换下一个，全部失败则抛出 <see cref="AggregateException"/>
     /// </summary>
     /// <param name="mail">邮件</param>
     protected override String SendEmail(MailMessage mail)
     {
-        using var client = BuildSmtpClient();
-        var message = mail.ToMimeMessage();
-        var mes = client.Send(message);
-        client.Disconnect(true);
+        var accounts = MailSettings.Current.FindAllEnabled();
+        if (accounts.Count == 0)
+            throw new InvalidOperationException("没有找到可用的邮箱配置，请检查 Mail.config 中是否存在 IsEnabled=true 的邮箱账号");
 
-        return mes;
+        List<Exception>? errors = null;
+        foreach (var account in accounts)
+        {
+            try
+            {
+                // 每次尝试时使用该账号的发件人地址
+                mail.From = new MailAddress(account.From!, account.FromName, Encoding.UTF8);
+
+                using var client = BuildSmtpClient(account.Host!, account.Port, account.UserName!, account.Password!, account.IsSSL);
+                var message = mail.ToMimeMessage();
+                var mes = client.Send(message);
+                client.Disconnect(true);
+                return mes;
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+                errors ??= [];
+                errors.Add(ex);
+            }
+        }
+
+        throw new AggregateException($"所有 {accounts.Count} 个启用的邮箱账号均发送失败", errors!);
     }
 
     /// <summary>
@@ -56,30 +78,41 @@ public class MailKitEmailSender(IMailKitSmtpBuilder smtpBuilder) : EmailSenderBa
     }
 
     /// <summary>
-    /// 发送邮件
+    /// 异步发送邮件。依次尝试所有已启用账号，默认账号优先；某账号发送失败时自动切换下一个，全部失败则抛出 <see cref="AggregateException"/>
     /// </summary>
     /// <param name="mail">邮件</param>
     protected override async Task<String> SendEmailAsync(MailMessage mail)
     {
-        using var client = BuildSmtpClient();
-        var message = mail.ToMimeMessage();
-        var result = String.Empty;
+        var accounts = MailSettings.Current.FindAllEnabled();
+        if (accounts.Count == 0)
+            throw new InvalidOperationException("没有找到可用的邮箱配置，请检查 Mail.config 中是否存在 IsEnabled=true 的邮箱账号");
 
-        try
+        List<Exception>? errors = null;
+        foreach (var account in accounts)
         {
-            result = await client.SendAsync(message).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            XTrace.WriteException(ex);
-            result = ex.Message;
-        }
-        finally
-        {
-            await client.DisconnectAsync(true).ConfigureAwait(false);
+            // 每次尝试时使用该账号的发件人地址
+            mail.From = new MailAddress(account.From!, account.FromName, Encoding.UTF8);
+
+            using var client = BuildSmtpClient(account.Host!, account.Port, account.UserName!, account.Password!, account.IsSSL);
+            var message = mail.ToMimeMessage();
+            try
+            {
+                var result = await client.SendAsync(message).ConfigureAwait(false);
+                await client.DisconnectAsync(true).ConfigureAwait(false);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+                errors ??= [];
+                errors.Add(ex);
+
+                // 不能用 ConfigureAwait(false) 后继续复用同一个连接，直接断开即可
+                await client.DisconnectAsync(true).ConfigureAwait(false);
+            }
         }
 
-        return result;
+        throw new AggregateException($"所有 {accounts.Count} 个启用的邮箱账号均发送失败", errors!);
     }
 
     /// <summary>
