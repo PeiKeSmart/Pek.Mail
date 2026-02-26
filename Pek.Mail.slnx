@@ -9,5 +9,6 @@
     <File Path="Readme.MD" />
   </Folder>
   <Project Path="Pek.Mail.Extensions/Pek.Mail.Extensions.csproj" />
+  <Project Path="Pek.Mail.TestConsole/Pek.Mail.TestConsole.csproj" />
   <Project Path="Pek.Mail/Pek.Mail.csproj" />
 </Solution>

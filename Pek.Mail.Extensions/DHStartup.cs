@@ -1,9 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+﻿using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using Pek.Infrastructure;
 using Pek.Mail.MailKit;
@@ -13,7 +8,7 @@ using Pek.VirtualFileSystem;
 namespace Pek.Mail;
 
 /// <summary>
-/// 表示应用程序启动时配置SignalR的对象
+/// 表示应用程序启动时配置服务和中间件的对象
 /// </summary>
 public class DHStartup : IPekStartup
 {
