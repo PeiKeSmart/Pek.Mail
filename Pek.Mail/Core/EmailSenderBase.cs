@@ -105,6 +105,82 @@ public abstract class EmailSenderBase : IEmailSender
         return await SendAsync(mail).ConfigureAwait(false);
     }
 
+    /// <summary>发送邮件。按 <paramref name="accounts"/> 集合依次尝试，成功即止；全部失败则抛出 <see cref="AggregateException"/>。集合为空时退回使用所有已启用账号</summary>
+    /// <param name="box">邮件</param>
+    /// <param name="accounts">指定要尝试的 <see cref="MailData"/> 账号集合</param>
+    public virtual String Send(EmailBox box, IList<MailData> accounts)
+    {
+        if (accounts == null || accounts.Count == 0)
+            return Send(box);
+
+        var mail = BuildMailMessage(box);
+
+        List<Exception>? errors = null;
+        foreach (var account in accounts)
+        {
+            try
+            {
+                mail.From = new MailAddress(account.From!, account.FromName, Encoding.UTF8);
+                mail.ReplyToList.Clear();
+                mail.ReplyToList.Add(new MailAddress(account.From!));
+                return SendEmail(mail, account.Host!, account.Port, account.UserName!, account.Password!, account.IsSSL);
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+                errors ??= [];
+                errors.Add(ex);
+            }
+        }
+
+        throw new AggregateException($"指定的 {accounts.Count} 个邮箱账号均发送失败", errors!);
+    }
+
+    /// <summary>异步发送邮件。按 <paramref name="accounts"/> 集合依次尝试，成功即止；全部失败则抛出 <see cref="AggregateException"/>。集合为空时退回使用所有已启用账号</summary>
+    /// <param name="box">邮件</param>
+    /// <param name="accounts">指定要尝试的 <see cref="MailData"/> 账号集合</param>
+    public virtual async Task<String> SendAsync(EmailBox box, IList<MailData> accounts)
+    {
+        if (accounts == null || accounts.Count == 0)
+            return await SendAsync(box).ConfigureAwait(false);
+
+        var mail = BuildMailMessage(box);
+
+        List<Exception>? errors = null;
+        foreach (var account in accounts)
+        {
+            try
+            {
+                mail.From = new MailAddress(account.From!, account.FromName, Encoding.UTF8);
+                mail.ReplyToList.Clear();
+                mail.ReplyToList.Add(new MailAddress(account.From!));
+                return await SendEmailAsync(mail, account.Host!, account.Port, account.UserName!, account.Password!, account.IsSSL).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+                errors ??= [];
+                errors.Add(ex);
+            }
+        }
+
+        throw new AggregateException($"指定的 {accounts.Count} 个邮箱账号均发送失败", errors!);
+    }
+
+    /// <summary>将 <see cref="EmailBox"/> 转换为 <see cref="MailMessage"/>，不预设发件人（由各账号分别设置）</summary>
+    private MailMessage BuildMailMessage(EmailBox box)
+    {
+        var mail = new MailMessage();
+        PaserMailAddress(box.To, mail.To);
+        PaserMailAddress(box.Cc, mail.CC);
+        PaserMailAddress(box.Bcc, mail.Bcc);
+        mail.Subject = box.Subject;
+        mail.Body = box.Body;
+        mail.IsBodyHtml = box.IsBodyHtml;
+        HandlerAttachments(box.Attachments, mail.Attachments);
+        return mail;
+    }
+
     /// <summary>
     /// 发送邮件
     /// </summary>

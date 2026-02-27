@@ -1,5 +1,6 @@
 ﻿using System.Net.Mail;
 
+using Pek.Mail;
 using Pek.Mail.Core;
 
 namespace Pek.Mail.Abstractions;
@@ -47,18 +48,24 @@ public interface IEmailSender
     /// <param name="isBodyHtml">是否html内容</param>
     Task SendAsync(String from, String to, String subject, String body, Boolean isBodyHtml = true);
 
-    /// <summary>
-    /// 发送邮件
-    /// </summary>
+    /// <summary>发送邮件。使用配置文件中所有已启用账号依次尝试</summary>
     /// <param name="box">邮件</param>
     String Send(EmailBox box);
 
-    /// <summary>
-    /// 发送邮件
-    /// </summary>
+    /// <summary>发送邮件。使用配置文件中所有已启用账号依次尝试</summary>
     /// <param name="box">邮件</param>
     /// <returns></returns>
     Task<String> SendAsync(EmailBox box);
+
+    /// <summary>发送邮件。按 <paramref name="accounts"/> 集合依次尝试，成功即止；全部失败则抛出 <see cref="AggregateException"/></summary>
+    /// <param name="box">邮件</param>
+    /// <param name="accounts">指定要尝试的 <see cref="MailData"/> 账号集合，集合为空时退回使用所有已启用账号</param>
+    String Send(EmailBox box, IList<MailData> accounts);
+
+    /// <summary>异步发送邮件。按 <paramref name="accounts"/> 集合依次尝试，成功即止；全部失败则抛出 <see cref="AggregateException"/></summary>
+    /// <param name="box">邮件</param>
+    /// <param name="accounts">指定要尝试的 <see cref="MailData"/> 账号集合，集合为空时退回使用所有已启用账号</param>
+    Task<String> SendAsync(EmailBox box, IList<MailData> accounts);
 
     /// <summary>
     /// 发送邮件
