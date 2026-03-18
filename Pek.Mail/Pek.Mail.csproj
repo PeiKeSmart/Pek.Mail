@@ -45,11 +45,11 @@
 
   <ItemGroup>
     <PackageReference Include="MailKit" Version="4.15.1" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.200">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.201">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.Common" Version="4.20.2026.305-beta0949" />
+    <PackageReference Include="Pek.Common" Version="4.20.2026.312-beta1246" />
   </ItemGroup>
 
   <ItemGroup>
